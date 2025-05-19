@@ -39,15 +39,15 @@ flowchart TD
 
 | Item Type          | PK               | SK                                | Notes                           |
 | ------------------ | ---------------- | --------------------------------- | ------------------------------- |
-| **Set**            | `TCG#{tcg_name}` | `SET#{set_name}`                  | one row per set                 |
+| **Set**            | `TCG#{tcg_name}` | `SET#{set_name}`                  | set metadata                    |
 | **Card (latest)**  | `SET#{set_name}` | `CARD_LATEST#{card_id}`           | current metadata + latest price |
 | **Card (history)** | `SET#{set_name}` | `CARD_HIST#{card_id}#{timestamp}` | price snapshot                  |
 
 Queries:
 
-- **All sets:** PK = `TCG#{tcg_name}`
-- **All cards in set:** PK = `SET#{set_name}` + `begins_with(SK, 'CARD_LATEST')`
-- **Price history:** PK = `SET#{set_name}` + `begins_with(SK, 'CARD_HIST#{card_id}')`
+- **All sets in TCG:** PK = `TCG#{tcg_name}`
+- **All cards in set:** PK = `SET#{set_name}` + SK = `begins_with('CARD_LATEST')`
+- **Price history of card:** PK = `SET#{set_name}` + SK = `between('CARD_HIST#{card_id}#{begin}', 'CARD_HIST#{card_id}#{end}')`
 
 ---
 
@@ -64,10 +64,10 @@ Queries:
 1. **EventBridge** triggers **scraper Lambda** daily.
 2. Scrapy pulls data in parallel across sets.
 3. Pipeline:
-   - Upsert `CARD_LATEST` (if changes detected).
-   - Append new `CARD_HIST` row.
-   - Upload image to S3 if missing.
    - Insert set row when a new set appears.
+   - Upsert `CARD_LATEST` (if changes detected).
+   - Upload image to S3 if missing.
+   - Append new `CARD_HIST` row.
 
 Designed for minimal writes (two per card per scrape).
 
@@ -82,17 +82,6 @@ Designed for minimal writes (two per card per scrape).
 | `CLOUDFRONT_URL` | `https://<cloudfront-id>.cloudfront.net/card-images/` |
 
 Create a `.env` locally based on `.env.example`; set the same values in each Lambda’s configuration.
-
----
-
-## 🧪 Local Testing
-
-```bash
-pip install -r requirements.txt    # only Scrapy required
-python functions/get-tcg-cards/handler.py   # invoke handlers manually
-```
-
-(Full infra is managed in the AWS Console.)
 
 ---
 
@@ -126,7 +115,7 @@ functions/
 ├── get-tcg-sets/
 └── scraper/          # Scrapy spider + pipeline
 .env.example
-requirements.txt      # scrapy
+requirements.txt
 README.md
 .gitignore
 ```
@@ -135,5 +124,4 @@ README.md
 
 ## 🙌 Credits
 
-Created by **Sean Noh** · Data courtesy of **TCGRepublic** (for educational use).  
-Feel free to open issues or PRs for suggestions and improvements!
+Created by **Sean Noh**
