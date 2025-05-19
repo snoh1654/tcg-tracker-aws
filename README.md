@@ -129,7 +129,7 @@ Create a `.env` locally based on `.env.example`; set the same values in each Lam
 
 ## Frontend
 
-The frontend is hosted on [tcg-scraper.netlify.app](https://tcg-tracker.netlify.app/). It is built using React, CSS, React Query, React Router, and Recharts to display price trend visualizations for the data obtained from daily scrapes. 
+The frontend is hosted on [tcg-tracker.netlify.app](https://tcg-tracker.netlify.app/). It is built using React, CSS, React Query, React Router, and Recharts to display price trend visualizations for the data obtained from daily scrapes. 
 
 You can find the frontend source code and documentation here:
 ➡️ [tcg-tracker-frontend](https://github.com/snoh1654/tcg-tracker-frontend),
