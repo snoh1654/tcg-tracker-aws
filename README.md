@@ -9,18 +9,23 @@ Scrapes daily prices from [TCGRepublic](https://tcgrepublic.com), stores data in
 
 ```mermaid
 flowchart TD
-  A[React Frontend] -->|HTTPS| B(API Gateway)
+  A[React Frontend] -->|API Requests| B(API Gateway)
+  A -->|Image Requests| H[CloudFront CDN]
+
   B --> C1[get-tcg-sets Lambda]
   B --> C2[get-tcg-cards Lambda]
   B --> C3[get-tcg-card-history Lambda]
-  C1 & C2 & C3 --> D[(DynamoDB<br>single table)]
+
+  C1 --> D[DynamoDB - single table]
+  C2 --> D
+  C3 --> D
+
   subgraph Daily Scrape
-    E[EventBridge<br>(rate 1 day)] --> F[scraper Lambda]
+    E[EventBridge - every 24h] --> F[Scraper Lambda]
     F --> D
-    F --> G[S3 (card images)]
+    F --> G[S3 - Card Images]
+    G --> H
   end
-  G -->|origin access| H[CloudFront CDN]
-  H --> A
 ```
 
 ---
