@@ -1,7 +1,7 @@
 # 🃏 TCG Tracker – AWS Backend
 
 Serverless backend for the **TCG Price Tracker**.  
-Scrapes daily prices from [TCGRepublic](https://tcgrepublic.com), stores data in DynamoDB, serves it through REST endpoints, and delivers card images via CloudFront.
+Scrapes daily TCG card prices, stores data in DynamoDB, serves it through REST endpoints, and delivers card images via CloudFront.
 
 ---
 
@@ -30,13 +30,17 @@ flowchart TD
 
 ---
 
-## 🔌 API Endpoints
+## 🕑 Scraping Workflow
 
-| Method | Path                                        | Description                                         | Lambda                   |
-| ------ | ------------------------------------------- | --------------------------------------------------- | ------------------------ |
-| `GET`  | `/card/{set_name}?card_id=ID&start_date=14` | Historical prices for a card (default 14-day range) | **get-tcg-card-history** |
-| `GET`  | `/cards/{set_name}`                         | Latest data for every card in a set                 | **get-tcg-cards**        |
-| `GET`  | `/sets/{tcg_name}`                          | All sets for a TCG                                  | **get-tcg-sets**         |
+1. **EventBridge** triggers **scraper Lambda** daily.
+2. Scrapy pulls data in parallel across sets.
+3. Pipeline:
+   - Insert set row when a new set appears.
+   - Upsert `CARD_LATEST` (if changes detected).
+   - Upload image to S3 if missing.
+   - Append new `CARD_HIST` row.
+
+Designed for minimal writes (two per card per scrape).
 
 ---
 
@@ -56,37 +60,21 @@ Queries:
 
 ---
 
+## 🔌 API Endpoints
+
+| Method | Path                                        | Description                                         | Lambda                   |
+| ------ | ------------------------------------------- | --------------------------------------------------- | ------------------------ |
+| `GET`  | `/card/{set_name}?card_id=ID&start_date=14` | Historical prices for a card (default 14-day range) | **get-tcg-card-history** |
+| `GET`  | `/cards/{set_name}`                         | Latest data for every card in a set                 | **get-tcg-cards**        |
+| `GET`  | `/sets/{tcg_name}`                          | All sets for a TCG                                  | **get-tcg-sets**         |
+
+---
+
 ## 🖼️ Images (S3 + CloudFront)
 
 - **Bucket:** `tcg-images`
 - **Key format:** `card-images/{tcg_name}/{set_name}/{card_id}.jpg`
 - Bucket is **private**; CloudFront OAC serves public requests.
-
----
-
-## 🕑 Scraping Workflow
-
-1. **EventBridge** triggers **scraper Lambda** daily.
-2. Scrapy pulls data in parallel across sets.
-3. Pipeline:
-   - Insert set row when a new set appears.
-   - Upsert `CARD_LATEST` (if changes detected).
-   - Upload image to S3 if missing.
-   - Append new `CARD_HIST` row.
-
-Designed for minimal writes (two per card per scrape).
-
----
-
-## 🔧 Environment Variables
-
-| Key              | Example                                               |
-| ---------------- | ----------------------------------------------------- |
-| `DDB_TABLE_NAME` | `tcg`                                                 |
-| `S3_BUCKET_NAME` | `tcg-images`                                          |
-| `CLOUDFRONT_URL` | `https://<cloudfront-id>.cloudfront.net/card-images/` |
-
-Create a `.env` locally based on `.env.example`; set the same values in each Lambda’s configuration.
 
 ---
 
@@ -127,6 +115,28 @@ README.md
 
 ---
 
-## 🙌 Credits
+## 🔧 Environment Variables
 
-Created by **Sean Noh**
+| Key              | Example                                               |
+| ---------------- | ----------------------------------------------------- |
+| `DDB_TABLE_NAME` | `tcg`                                                 |
+| `S3_BUCKET_NAME` | `tcg-images`                                          |
+| `CLOUDFRONT_URL` | `https://<cloudfront-id>.cloudfront.net/card-images/` |
+
+Create a `.env` locally based on `.env.example`; set the same values in each Lambda’s configuration.
+
+---
+
+## Frontend
+
+The frontend is hosted on [tcg-scraper.netlify.app](https://tcg-tracker.netlify.app/). It is built using React, CSS, React Query, React Router, and Recharts to display price trend visualizations for the data obtained from daily scrapes. 
+
+You can find the frontend source code and documentation here:
+➡️ [tcg-tracker-frontend](https://github.com/snoh1654/tcg-tracker-frontend),
+
+---
+
+## Author
+
+**Sean Noh**  
+GitHub: [@snoh1654](https://github.com/snoh1654)
