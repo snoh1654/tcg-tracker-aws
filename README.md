@@ -3,6 +3,8 @@
 Serverless backend for the **TCG Price Tracker**.  
 Scrapes daily TCG card prices, stores data in DynamoDB, serves it through REST endpoints, and delivers card images via CloudFront.
 
+Project is deployed on [tcg-tracker.netlify.com](https://tcg-tracker.netlify.app/)
+
 ---
 
 ## 🏗 Architecture
