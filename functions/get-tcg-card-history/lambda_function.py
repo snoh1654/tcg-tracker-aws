@@ -21,7 +21,6 @@ def lambda_handler(event, context):
                 'statusCode': 400,
                 'body': json.dumps({"error": "card_id is required"})
             }
-        card_id_2 = card_id
         card_id = unquote(card_id)
         if not set_name:
             return {
@@ -50,7 +49,7 @@ def lambda_handler(event, context):
         if not response["Count"]:
             return {
                 'statusCode': 404,
-                'body': json.dumps({"error": f"No records found for the given card_id. {card_id} {card_id_2}"})
+                'body': json.dumps({"error": f"No records found for the given card_id. {card_id}"})
             }
 
         # Return retrieved data
